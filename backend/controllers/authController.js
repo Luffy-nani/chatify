@@ -1,3 +1,4 @@
+const generateToken = require("../lib/utils");
 const User = require("../models/UserSchema");
 const bcrypt = require("bcrypt");
 
@@ -31,6 +32,7 @@ const signup = async (req, res) => {
     });
 
     const savedUser = await newUser.save();
+    generateToken(savedUser._id,res);
     console.log("✅ SAVED USER:", savedUser);
 
     res.status(201).json(savedUser);
