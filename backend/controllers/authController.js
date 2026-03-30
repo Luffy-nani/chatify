@@ -2,6 +2,7 @@ const User = require("../models/UserSchema");
 const bcrypt = require("bcrypt");
 const generateToken = require("../lib/utils.js");
 const { sendWelcomeEmail } = require("../emails/emailHandlers.js");
+const cloudinary=require("../lib/cloudinary.js");
 
 const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -54,6 +55,8 @@ const signup = async (req, res) => {
 const login=async(req,res)=>
 {
     const {email,password}=req.body;
+    if(!email||!password)
+      return res.status(400).json({message:"Email and Password are required"});
     try
     {
       const user=await User.findOne({email});
@@ -87,4 +90,27 @@ const logout=async (_,res)=>
     res.status(200).json({message:"Logged out successfully"});
 }
 
-module.exports = { signup,login,logout};
+const updateProfile=async (req,res)=>
+{
+  try {
+    const { profilePic } = req.body;
+    if (!profilePic) return res.status(400).json({ message: "Profile pic is required" });
+
+    const userId = req.user._id;
+
+    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: uploadResponse.secure_url },
+      { new: true }
+    );
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.log("Error in update profile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+module.exports = { signup,login,logout,updateProfile};
