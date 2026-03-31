@@ -4,7 +4,10 @@ const {protectRoute}=require(`../middleware/authMiddleware.js`);
 const { arcjetProtection}=require(`../middleware/arcjetMiddleware.js`);
 const router = express.Router();
 
-router.use( arcjetProtection); //instead of writing it in every middleware like...we wrote it as router.use()
+
+router.use(arcjetProtection);
+
+ //instead of writing it in every middleware like...we wrote it as router.use()
 
 
 
