@@ -2,6 +2,9 @@ const aj = require("../lib/arcjet.js");
 const { isSpoofedBot } = require("@arcjet/inspect");
 
 const arcjetProtection = async (req, res, next) => {
+  // 👇 skip arcjet in development
+  if (process.env.NODE_ENV === "development") return next();
+  
   try {
     const decision = await aj.protect(req);
     if (decision.isDenied()) {
