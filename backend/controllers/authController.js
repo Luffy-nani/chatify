@@ -84,10 +84,14 @@ const login=async(req,res)=>
     }
 }
 
-const logout=async (_,res)=>
-{
-    res.cookie("jwt","",{maxAge:0});
-    res.status(200).json({message:"Logged out successfully"});
+const logout = async (_, res) => {
+    res.cookie("jwt", "", { 
+        maxAge: 0,
+        httpOnly: true,
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production"
+    });
+    res.status(200).json({ message: "Logged out successfully" });
 }
 
 const updateProfile=async (req,res)=>
