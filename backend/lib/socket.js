@@ -6,7 +6,6 @@ const express=require(`express`);
 const socketAuthMiddleware=require("../middleware/socketAuthMiddleware");
 const app=express();
 
-
 const server=http.createServer(app);
 
 const io=new Server(server,{
@@ -16,7 +15,6 @@ const io=new Server(server,{
     },
 });
 
-//apply auth middleware to all socket connections
 io.use(socketAuthMiddleware);
 
 const userSocketMap={};
@@ -35,4 +33,4 @@ io.on("connection",(socket)=>{
     });
 });
 
-module.exports = { app, server, io };
+module.exports = { app, server, io, userSocketMap }; // ✅ added userSocketMap

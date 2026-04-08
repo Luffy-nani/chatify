@@ -1,6 +1,7 @@
 const Message=require(`../models/MessageSchema`);
 const User=require(`../models/UserSchema`);
 const cloudinary=require(`../lib/cloudinary`);
+const { io, userSocketMap }=require(`../lib/socket`); // ✅ added this
 
 
 const getAllContacts=async(req,res)=>
@@ -22,7 +23,7 @@ const getAllContacts=async(req,res)=>
 
 const getAllChats = async (req, res) => {
   try {
-    const loggedInUserId = req.user._id; // ✅ fixed name
+    const loggedInUserId = req.user._id;
 
     const messages = await Message.find({
       $or: [{ senderId: loggedInUserId }, { receiverId: loggedInUserId }],
@@ -55,12 +56,8 @@ const getMessagesByUserId=async(req,res)=>
         
         const messages=await Message.find({
             $or:[
-                {
-                    senderId:myId, receiverId:userToChatId
-                },
-                {
-                    senderId:userToChatId, receiverId:myId
-                }
+                {senderId:myId, receiverId:userToChatId},
+                {senderId:userToChatId, receiverId:myId}
             ],
         });
         res.status(200).json(messages);
@@ -81,15 +78,14 @@ const sendMessage=async(req,res)=>
         const {id:receiverId}=req.params;
 
         if(!text && !image)
-            return res.status(400).json({message:"Text or image is requried"});
+            return res.status(400).json({message:"Text or image is required"});
 
-        if (senderId.equals(receiverId)) {
+        if (senderId.equals(receiverId))
             return res.status(400).json({ message: "Cannot send messages to yourself." });
-          }  
+
         const receiverExists = await User.exists({ _id: receiverId });
-        if (!receiverExists) {
-      return res.status(404).json({ message: "Receiver not found." });
-        } 
+        if (!receiverExists)
+            return res.status(404).json({ message: "Receiver not found." });
 
         let imageUrl;
         if(image)
@@ -106,8 +102,14 @@ const sendMessage=async(req,res)=>
         });
 
         await newMessage.save();
+
+        // ✅ emit to receiver if they're online
+        const receiverSocketId = userSocketMap[receiverId];
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("newMessage", newMessage);
+        }
+
         res.status(201).json(newMessage);
-    
     }
     catch(error)
     {
@@ -116,4 +118,4 @@ const sendMessage=async(req,res)=>
     }
 }
 
-module.exports={getAllContacts,getAllChats ,getMessagesByUserId,sendMessage};
+module.exports={getAllContacts,getAllChats,getMessagesByUserId,sendMessage};

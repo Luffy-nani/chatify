@@ -10,6 +10,8 @@ function ChatContainer() {
   const {
     selectedUser,
     getMessagesByUserId,
+    subscribeToMessages,      // ✅ added
+    unsubscribeFromMessages,  // ✅ added
     messages,
     isMessagesLoading,
   } = useChatStore();
@@ -18,7 +20,10 @@ function ChatContainer() {
 
   useEffect(() => {
     getMessagesByUserId(selectedUser._id);
-  }, [selectedUser, getMessagesByUserId]);
+    subscribeToMessages();                  // ✅ start listening for new messages
+
+    return () => unsubscribeFromMessages(); // ✅ cleanup when chat closes or user changes
+  }, [selectedUser._id]);               // ✅ changed dependency to selectedUser._id (more stable)
 
   useEffect(() => {
     if (messageEndRef.current) {
@@ -57,7 +62,6 @@ function ChatContainer() {
                 </div>
               </div>
             ))}
-            {/* 👇 scroll target */}
             <div ref={messageEndRef} />
           </div>
         ) : isMessagesLoading ? (
